@@ -1,0 +1,6 @@
+.deps
+.libs
+Makefile
+Makefile.in
+sfsrocd
+rxx_test

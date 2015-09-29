@@ -1,0 +1,264 @@
+This document explains how to minimally run SFSRO in a developmental
+environment.  It assumes you are running a client and server on a
+single physical machine.  You will need root access at some point, but
+must of the code can run under your username.  I assume you are
+compiling SFS with the most recent code in CVS, not the SFS tar balls.
+
+* Compiling the software
+
+Begin by configuring SFS with the Sleepycat database (aka libdb.a).
+Most operating systems come with the Sleepycat library installed.  The
+configure program will attempt to find it.
+
+% cvs co sfs1
+% cd sfs1; ./setup; cd ..
+% mkdir build; cd build
+% env DEBUG=-g ../sfs1/configure
+% gmake
+
+If configure does not find libdb, visit http://www.sleepycat.com/ or
+download the appropriate libdb package for your operating system. 
+
+We set DEBUG=-g to compile without optimization.  If you forget this
+option, your compile will take a long time and gdb may print the wrong
+line numbers while stepping through an execution.
+
+
+* Creating a database
+
+First create an SFS private key.  I usually store this information
+in build/stuff/:
+
+% cd build; mkdir stuff
+% sfskey gen -P sfs_host_key
+
+Just hit enter a couple times and tap the keyboard to generate
+randomness.  If you plan to create an access-controlled database, you
+will also need a group key.  Use the "regress" tool to create a group
+key, then "distribute" the current version of the key.  The following
+will put the owner private key in kr/1
+
+% mkdir kr
+% regress -c -i 1 -d kr
+% mkdir ku
+% regress -a -i 1 -d kr -o ku/1
+
+ Next, create your first SFSRO database!  Pick a directory
+tree to export.  I usually export the untarred sfs-0.7.2 tar ball.
+
+% tar -xvzf sfs-0.7.2.tar.gz
+% ../sfsrodb/sfsrodb -d sfs-0.7.2 -s sfs_host_key -o sfs.0.7.2.rodb \
+                     -h elk.isi.jhu.edu -v
+
+[or for encryption,
+% ../sfsrodb/sfsrodb -d sfs-0.7.2 -s sfs_host_key -o sfs.0.7.2.rodb \
+                     -h elk.isi.jhu.edu -v -g ku/1
+
+if you stored the user keys in the ku/1.ku file]
+
+which results in:
+
+sfsrodb: using DB3
+sfsrodb: opt_permissions
+sfsrodb: opt_dbtype
+sfsrodb: opt_create
+sfsrodb: opt_flag
+sfsrodb: using DB3
+sfsrodb: using DB3
+sfsrodb: using DB3
+sfsrodb: using DB3
+sfsrodb: use open instead
+...
+sfsrodb: Database good from: 
+ Thu Feb 19 16:43:22 2004
+until:
+ Fri Feb 18 16:43:22 2005
+sfsrodb: Added fsinfo
+sfsrodb: put conres in db
+sfsrodb: close db
+
+The command line way above tells the SFSRO database creation tool to
+export the sfs-0.7.2 directory tree, sign the database with the
+sfs_host_key private key, store the database in sfs.0.7.2.rodb, and to
+advertise the database as being served by elk.isi.jhu.edu.  This last
+part is just a technicality of the implementation of the SFSRO server.
+The client tells a server which database to read from by providing a
+hostname.  In princple, you shouldn't need to specify a hostname.
+Some day I'll fix it to demultiplex requests by the server public key.
+The -v flag gives verbose debugging info.
+
+Back to our story.
+
+* Starting an SFSRO server (aka, replica)
+
+For the best debugging environment, run the server in an emacs
+shell.  Then you can easily search through the RPC traces.
+
+In your build/stuff/ directory, create a file called
+"sfsrosd_config".  Mine contains:
+
+ publishfile /home/fubob/src/build/stuff/sfs.0.7.2.rodb
+
+The syntax is pretty straightforward.  You enter one "publishfile"
+directive for each database you wish to serve.  I've only tested this
+while serving a single database though...
+
+Back in your build/stuff/ directory, run the server:
+
+% export SFS_PORT=8888
+% export ASRV_TRACE=10
+% ../sfsrosd/sfsrosd -f /path/to/your/sfsrosd_config
+
+Depending on your shell, you might use the "setenv" command instead of
+"export."  Setting ASRV_TRACE to 10 will produce the most verbose
+debugging information about the RPCs.  This execution should result
+in:
+
+sfsrosd: using DB3
+sfsrosd: using DB3
+sfsrosd: using DB3
+sfsrosd: using DB3
+sfsrosd: version 0.7.2, pid 22664
+sfsrosd: serving @elk.isi.jhu.edu%8888,xzfeqjnareyn2dhqxccd7wrk5m847rh2
+sfsrosd: No sfssd detected, running in standalone mode
+
+You now have a working server.  Note, you don't even need root access
+to run a server.
+
+* Starting an SFSRO client
+
+The client is the most complex part of SFSRO, but it's not too bad!
+Fire up one shell and two emacs buffers for best operation.  The shell
+is for interacting with the file system.  One emacs buffer is for
+running sfsrocd.  The other emacs is for running sfscd.
+
+As root, create an "/sfstest" directory.  Then unroot yourself.
+
+Back in your stuff directory, create an "sfscd_config" file that
+contains:
+
+ Release *
+   Program 344446.2 sfsrocd
+
+This tells the sfscd program to accept connections for the SFSRO
+protocol 34446 version 2.  These numbers come from the
+svc/sfsro_prot.x file.
+
+To capture the best debugging information, start a shell in each emacs
+buffer.  In each shell, go to your build/stuff directory.
+First, start the sfsrocd daemon:
+ 
+% export SFS_RUNINPLACE=/path/to/your/build/
+% export SFS_PORT=8888
+% export SFS_ROOT=/sfstest
+% export ACLNT_TRACE=10
+% export ASRV_TRACE=10
+% ../sfsrocd/sfsrocd
+
+[or with encryption,
+% ../sfsrocd/sfsrocd ku
+assuming the 1.ku file lives in the ku/ directory]
+
+which should result in:
+
+sfsrocd: version 0.7.2, pid 6771
+sfsrocd: axprt_unix::alloc(0): not unix domain socket
+
+The SFS_RUNINPLACE environment variable tells SFS to store all UNIX
+sockets in the $SFS_RUNINPLACE/runinplace/ directory.  The sfsrocd and
+sfscd daemon will communicate via RPC with these UNIX sockets:
+
+If you instead see:
+
+sfsrocd: version 0.7.2, pid 6800
+sfsrocd: axprt_unix::alloc(0): not unix domain socket
+sfsrocd: unixsocket: Address already in use
+sfsrocd: axprt_unix_stdin: Address already in use
+sfsrocd: fatal: could not get connection to sfscd.
+
+then the permissions on your UNIX sockets are messed up.  You can
+safely remove all the files in the runinplace directory, which
+typically include:
+
+.sfsrocd
+agent.sock
+random_seed
+sfsrocd_1.sock
+
+Then you should be able to start the sfsrocd daemon.
+
+Now go to your other emacs shell.  Become root:
+
+% su 
+% export SFS_RUNINPLACE=/path/to/your/build/
+% export SFS_PORT=8888
+% export SFS_ROOT=/sfstest
+% export ACLNT_TRACE=10
+% export ASRV_TRACE=10
+% ../sfscd/sfscd -d -l -f sfscd_config
+
+This should result in:
+
+sfscd: ACLNT_TRACE: call sfscd_program_1:SFSCDPROC_INIT x=0
+sfscd_initarg ARGS = {
+  string name<> = "sfsrocd_1";
+};
+sfscd: version 0.7.2, pid 7129
+sfsrocd: version 0.7.2, pid 7130
+sfscd: not dropping privileges for debugging
+nfsmounter: version 0.7.2, pid 7131
+
+sfsrocd: ASRV_TRACE: serve sfscd_program_1:SFSCDPROC_INIT x=0
+sfscd_initarg ARGS = {
+  string name<> = "sfsrocd_1";
+};
+
+followed by a bunch of RPC traffic.  You should see a bunch of traffic
+on the sfsrocd buffer too.  sfscd and sfsrocd are connecting for
+housekeeping and fun.
+
+The -d flag tells sfscd not to fork into the background.  The -l flag
+tells sfscd to allow connections from the local machine.  In
+SFS-read-write, kernel deadlock can result if you allow an SFS client
+to connect to the SFS server on the same machine.  In SFSRO, you are
+probably safe.  I hope.
+
+You should have a working SFSRO set up now.
+
+* Accessing the files!!!
+
+In your xterm, cd to the correct self-certifying path.
+Your sfsrosd program should have displayed it:
+
+$ cd /sfstest/@elk.isi.jhu.edu%8888,xzfeqjnareyn2dhqxccd7wrk5m847rh2/
+$ ls
+
+you'll see the directory listing of the sfs-0.7.2 directory.  You'll
+also see a lot of SFSRO and NFS RPC traffic on the sfsrocd daemon.
+
+In the future, you can avoid retyping a long self-certifying path
+by creating a symlink:
+
+$ cd build/stuff
+$ ln -s /sfstest/@elk.isi.jhu.edu%8888,xzfeqjnareyn2dhqxccd7wrk5m847rh2 elk
+$ cd elk
+
+Enjoy!
+
+-Kevin
+
+
+***********
+Update for Chefs with proxy re-encryption
+
+To enable proxy re-encryption, compile SFS with:
+
+env DEBUG=-g SFSRO_PROXY_LIB="/home/fubob/src/proxyfs/proxyfs.a /home/fubob/src/proxyfs/miracl/miracl.a" ../sfs1/configure
+
+Of course, compile miracl and proxyfs code as appropriate for whatever
+path you set above.
+
+and inside sfsrodb/sfsrodb.h set
+#define SFSRO_PROXY 1
+
+

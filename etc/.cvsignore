@@ -1,0 +1,8 @@
+.deps
+Makefile
+Makefile.in
+agentrc
+sfs_config
+sfsauthd_config
+sfscd_config
+sfssd_config

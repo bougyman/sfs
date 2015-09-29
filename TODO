@@ -1,0 +1,46 @@
+
+==== Required stuff for next release:
+
+* Have some story for administrative realms
+  - finish incremental transfers, some kind of client authd authentication
+  - document how to use this stuff
+
+* Make REX work
+  - Make sure session resumption is bullet-proof
+  - finish GUI stuff (can't assume gtk-python)
+
+* Do something intelligent with agent output
+
+* Rewrite and audit UPDATE RPC code in sfsauthd
+
+* Make rexd work well even if you aren't running sfscd on server
+
+==== Stuff to do soon:
+
+* Standalone mode for rex that doesn't require agent (as when you
+  borrow a friend's terminal).
+
+* Get revocation/forwarding support working in sfskey, sfssd
+
+* Automatic proxy/NAT support
+
+* Have some kind of built-in portmap in nfsmounter, if port 111
+  unbound, to avoid problems when people don't run portmap.
+
+* Check ownership of tcp sockets when possible in listen (currently
+  only works on BSD).
+
+* Figure out OpenBSD/FreeBSD kernel panic
+
+==== Stuff to do eventually:
+
+* IPv6
+* Provable SRP primes
+* Local login
+* Break out private key into separate program
+* Make timecb deal better with clock adjustments
+* Compress traffic
+* SFS-RO
+* Schnorr Key Generation: generate arbitrary-length schnorr keys.
+* Simple password change program
+* Document libasync

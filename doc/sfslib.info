@@ -1,0 +1,361 @@
+This is sfslib.info, produced by makeinfo version 4.7 from sfslib.texi.
+
+START-INFO-DIR-ENTRY
+* SFS libraries: (sfslib).      SFS libraries programmer's guide
+END-INFO-DIR-ENTRY
+
+   This file documents SFS, the self-certifying file system.
+
+   Copyright 2004 David Mazie`res
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Free Software Foundation.
+
+
+File: sfslib.info,  Node: Top,  Next: Setting up,  Prev: (dir),  Up: (dir)
+
+SFS
+***
+
+This file documents the SFS asynchronous I/O, RPC, and crypto, and file
+system contsruction libraries.
+
+   This document applies to version 0.8pre of the SFS distribution.
+
+* Menu:
+
+* Setting up::                  Setting up your build directory
+* Contacts::                    How to contact people involved with SFS
+* Concept Index::               Index of concepts
+
+
+File: sfslib.info,  Node: Setting up,  Next: Contacts,  Prev: Top,  Up: Top
+
+1 Setting up a build directory using the SFS libraries
+******************************************************
+
+SFS's build process makes use of the GNU autoconf, automake, and
+libtool packages.  Autoconf in particular is what creates the familiar
+`./configure' script.  It is highly recommended that you use these
+tools to set up the build directory for your project if you are
+building against the SFS libraries.
+
+   If you set up your project directory properly, your software will by
+default search for and link against an installed version of SFS, but
+can also be configured via the `--with-sfs=DIR' flag to link against an
+uninstalled SFS build tree.  The latter is quite useful for debugging,
+as one can use an unoptimized SFS build that was compiled with dmalloc.
+
+   To set up a new project directory, you must perform the following
+steps:
+
+  1. Create a new directory for your project, say `yourproject'
+
+  2. Copy the files `acinclude.m4' and `setup' from an SFS source
+     distribution into your `yourproject/' directory.
+
+  3. Create a `configure.in' file in `yourproject/', including some
+     SFS-specific boilerplate and any extra tests you need to perform
+     to determine properties of the compiler and operating system.
+     *Note Minimal configure.in::, for more information on doing this.
+
+  4. Create a `Makefile.am' file in `yourproject/', specifying what
+     programs to build from what source files, and where to install
+     them.  *Note Simple Makefile.am::, for more information on doing
+     this.
+
+  5. Create files `.cvsignore', `AUTHORS', `NEWS', `README', by running
+     the following commands in `yourproject/':
+          touch AUTHORS NEWS README
+          cat <<EOF > .cvsignore
+          .deps
+          .libs
+          Makefile
+          Makefile.in
+          aclocal.m4
+          config.cache
+          config.guess
+          config.h
+          config.h.in
+          config.log
+          config.status
+          config.sub
+          configure
+          install-sh
+          libtool
+          ltconfig
+          ltmain.sh
+          missing
+          mkinstalldirs
+          stamp-h
+          stamp-h.in
+          EOF
+
+  6. Now you are ready to build your software, which you can do by
+     running the following commands in `yourproject/':
+          sh ./setup
+          ./configure --with-sfs=SFS-BUILD-DIRECTORY
+          gmake
+
+* Menu:
+
+* Software requirements::       Software you must install to build with SFS
+* Minimal configure.in::        Example `configure.in' file
+* Simple Makefile.am::          Example `Makefile.am' file
+* Makefile.am with XDR files::  Example `Makefile.am' RPC `.x' file
+
+
+File: sfslib.info,  Node: Software requirements,  Next: Minimal configure.in,  Prev: Setting up,  Up: Setting up
+
+1.1 Software requirements for using autoconf/automake
+=====================================================
+
+In order to use `autoconf' and `automake', you will need the following
+software packages installed on your machine.  (Many operations systems
+have an easy way of installing software packages, so you might check
+your local operating system's packaging system before installing these
+from scratch.)
+
+*dmalloc*
+     `dmalloc' is a debugging malloc library, available from
+     `http://dmalloc.com/'.  When developing software with the SFS
+     libraries, you should link against dmalloc, as this also enables a
+     number of debugging features in SFS.  If you do not develop with
+     dmalloc, you will severely, severely regret it, unless you are a
+     far better programmer than the SFS developers.  Far easier to
+     discover bugs as you create them, with dmalloc, than to go back
+     later and try to find what is causing improper behavior in
+     thousands of lines of code you have already written....
+
+*GNU m4*
+     This is the macro processor used by `autoconf', available from
+     `ftp://ftp.gnu.org/pub/gnu/m4'.  Non-GNU versions of `m4' often do
+     not work with `autoconf'.
+
+*autoconf*
+     Processes `configure.in' to produce the `configure' script,
+     available from `ftp://ftp.gnu.org/pub/gnu/autoconf'.
+
+*automake*
+     Processes `Makefile.am' files to produce the `Makefile.in' files
+     that `configure' in turn uses to create `Makefile' files.
+     Available from `ftp://ftp.gnu.org/pub/gnu/automake'.
+
+*libtool*
+     Used by `automake'-generated `Makefile's to use and create
+     libraries.  Available from `ftp://ftp.gnu.org/pub/gnu/libtool'.
+
+
+File: sfslib.info,  Node: Minimal configure.in,  Next: Simple Makefile.am,  Prev: Software requirements,  Up: Setting up
+
+1.2 Minimal `configure.in' file
+===============================
+
+     dnl $Id: sfslib.texi,v 1.1 2004/06/13 04:12:07 dm Exp $
+     dnl
+     dnl Process this file with autoconf to produce a configure script.
+     dnl
+
+     AC_INIT(acinclude.m4)
+     AM_INIT_AUTOMAKE(YOUR-PROJECT, 0.0)
+     AM_CONFIG_HEADER(config.h)
+
+     AC_CANONICAL_HOST
+
+     dnl Checks for programs.
+     AC_PROG_CC
+     AC_PROG_CPP
+     AC_PROG_CXX
+     SFS_WFLAGS
+     AC_C_INLINE
+     AC_PROG_INSTALL
+     AC_PROG_LN_S
+
+     AM_DISABLE_SHARED
+
+     dnl
+     dnl Deal with incompatibility between certain versions
+     dnl of autoconf and automake.
+     dnl
+     test -z "$target" && target="$host"
+
+     AM_PROG_LIBTOOL
+
+     SFS_SFS
+
+     dnl ***************************************************
+     dnl Here is where you should put any tests of your own
+
+     dnl
+     dnl ***************************************************
+
+     SFS_CFLAGS
+
+     ETAGS_ARGS='-C /dev/null'
+     AC_SUBST(ETAGS_ARGS)
+
+     AC_OUTPUT(Makefile)
+
+
+File: sfslib.info,  Node: Simple Makefile.am,  Next: Makefile.am with XDR files,  Prev: Minimal configure.in,  Up: Setting up
+
+1.3 Simple `Makefile.am' example
+================================
+
+     ## Process this file with automake to produce Makefile.in
+     # $Id: sfslib.texi,v 1.1 2004/06/13 04:12:07 dm Exp $
+
+     dnl
+     dnl By default LDEPS is set to all the static libraries you need to
+     dnl link against.  If the SFS libraries are static, the default will
+     dnl be:
+     dnl
+     dnl LDEPS = $(LIBSFSMISC) $(LIBSVC) $(LIBSFSCRYPT) \
+     dnl         $(LIBARPC) $(LIBASYNC)
+     dnl
+     dnl You don't need to do anything, but if you are linking against a
+     dnl subset of the SFS libraries, or want to add your own dependencies,
+     dnl you can override the default value of LDEPS.  (This is for
+     dnl dependency purposes only, it doesn't change the actual libraries
+     dnl your programs are linked against.  See LDADD for that.)
+     dnl
+     dnl In any event, programs should be made dependent on LDEPS:
+     dnl
+     $(PROGRAMS): $(LDEPS)
+
+     dnl Now define the programs you want to build.  Use noinst_PROGRAMS
+     dnl for programs that do not get installed, bin_PROGRAMS for programs
+     dnl that get installed in /usr/local/bin, sbin_PROGRAMS for ../sbin,
+     dnl etc.
+     dnl
+     noinst_PROGRAMS = yourprogram
+
+     dnl For each program, list the source files it includes
+     dnl
+     yourprogram_SOURCES = yourprogram.C
+
+     dnl If you want to change what all programs link against by default in
+     dnl this directory, you can set LDADD (either here or in
+     dnl configure.in).  The default is:
+     dnl
+     dnl LDADD = $(LIBSFSMISC) $(LIBSVC) $(LIBSFSCRYPT) \
+     dnl         $(LIBARPC) $(LIBASYNC) $(LIBGMP)
+
+     dnl If you want to change just what yourprogram links against, for
+     dnl instance to and library yourlib.la in addition to the libasync
+     dnl libraries, you can set the following variable:
+     dnl
+     dnl yourprogram_LDADD = yourlib.la $(LDADD)
+
+
+     dnl Have to list all headers here, if you want them included with in
+     dnl output of the "make distcheck" command.  If you want some headers
+     dnl installed in /usr/local/include, put them in a variable named
+     dnl include_HEADERS instead of noinst_HEADERS.
+     dnl
+     noinst_HEADERS = yourprogram.h
+
+     CLEANFILES = core *.core *~
+
+     EXTRA_DIST = .cvsignore setup
+     MAINTAINERCLEANFILES = aclocal.m4 install-sh mkinstalldirs \
+             missing configure config.guess config.sub config.h.in \
+             ltconfig ltmain.sh INSTALL COPYING Makefile.in stamp-h.in
+
+
+File: sfslib.info,  Node: Makefile.am with XDR files,  Prev: Simple Makefile.am,  Up: Setting up
+
+1.4 Example of `Makefile.am' file with XDR file
+===============================================
+
+     ## Process this file with automake to produce Makefile.in
+     # $Id: sfslib.texi,v 1.1 2004/06/13 04:12:07 dm Exp $
+
+     $(PROGRAMS): $(LDEPS)
+
+     noinst_PROGRAMS = yourprogram
+     yourprogram_SOURCES = yourprogram.C your_prot.C
+
+     noinst_HEADERS = yourprogram.h your_prot.x
+
+     your_prot.h: $(srcdir)/your_prot.x
+             @rm -f $@
+             -$(RPCC) -h $(srcdir)/your_prot.x || rm -f $@
+
+     your_prot.C: $(srcdir)/your_prot.x
+             @rm -f $@
+             -$(RPCC) -c $(srcdir)/your_prot.x || rm -f $@
+
+     dist-hook:
+             cd $(distdir) && rm -f your_prot.h your_prot.C
+
+     $(yourprogram_OBJECTS): your_prot.x
+
+     CLEANFILES = core *.core *~ your_prot.h your_prot.C
+
+     EXTRA_DIST = your_prot.x .cvsignore setup
+     MAINTAINERCLEANFILES = aclocal.m4 install-sh mkinstalldirs \
+             missing configure config.guess config.sub config.h.in \
+             ltconfig ltmain.sh INSTALL COPYING Makefile.in stamp-h.in
+
+
+File: sfslib.info,  Node: Contacts,  Next: Concept Index,  Prev: Setting up,  Up: Top
+
+2 How to contact people involved with SFS
+*****************************************
+
+Please report any bugs you find in SFS to <sfsbug@redlab.lcs.mit.edu>.
+
+   You can send mail to the authors of SFS at
+<sfs-dev@pdos.lcs.mit.edu>.
+
+   There is also a mailing list of SFS users and developers at
+<sfs@sfs.fs.net>.  To subscribe to the list, send mail to
+<sfs-subscribe@sfs.fs.net>.
+
+
+File: sfslib.info,  Node: Concept Index,  Prev: Contacts,  Up: Top
+
+Concept Index
+*************
+
+ [index ]
+* Menu:
+
+* autoconf:                              Software requirements.
+                                                               (line 29)
+* automake:                              Software requirements.
+                                                               (line 33)
+* configure.in:                          Minimal configure.in. (line  6)
+* dmalloc:                               Software requirements.
+                                                               (line 13)
+* libtool:                               Software requirements.
+                                                               (line 38)
+* m4:                                    Software requirements.
+                                                               (line 24)
+* Makefile.am:                           Simple Makefile.am.   (line  6)
+
+
+
+Tag Table:
+Node: Top950
+Node: Setting up1406
+Node: Software requirements4130
+Node: Minimal configure.in5928
+Node: Simple Makefile.am7056
+Node: Makefile.am with XDR files9673
+Node: Contacts10836
+Node: Concept Index11307
+
+End Tag Table

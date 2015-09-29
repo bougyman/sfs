@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# This command is run by sfsagent if you do not specify an alternate
+# program to run with the -c flag.  Any -t or key name arguments
+# specified to sfsagent are passed along to this script.  The default
+# is just to call "sfskey add" with whatever argument was given to
+# sfsagent.
+#
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+test "$SFS_RUNINPLACE" && bindir="$SFS_RUNINPLACE"/agent
+
+#set -x
+exec ${bindir}/sfskey add "$@"

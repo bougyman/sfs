@@ -1,0 +1,86 @@
+dnl $Id: configure.in,v 1.13 2002/10/04 15:30:59 dm Exp $
+dnl
+dnl Process this file with autoconf to produce a configure script.
+dnl
+
+AC_INIT(acinclude.m4)
+AM_INIT_AUTOMAKE(uvfs, 0.0)
+AM_CONFIG_HEADER(config.h)
+
+AC_ARG_ENABLE(uvfs,
+--enable-uvfs             Build support for user-level VFS lkm,,
+enable_uvfs=yes)
+AM_CONDITIONAL(UVFS, test "$enable_uvfs" = yes)
+
+dnl
+dnl Figure out what OS to build for
+dnl
+OSDIRS="openbsd linux"
+AC_SUBST(OSDIR)
+AC_SUBST(NOTOSDIR)
+OSDIR=
+
+if test $enable_uvfs = "yes"; then
+    AC_CANONICAL_HOST
+    case "${host_os}" in
+        openbsd*)	OSDIR=openbsd ;;
+        linux*)	OSDIR=linux ;;
+    esac
+    if test -z "${OSDIR}"; then
+	AC_MSG_ERROR("No support for ${host_os} yet.")
+    fi
+echo "***************************************************"
+echo "  Configuring uvfs for for ${OSDIR}"
+echo "***************************************************"
+fi
+
+unset NOTOSDIR
+for dir in $OSDIRS; do
+    NOTOSDIR="${NOTOSDIR}${NOTOSDIR+ }$dir"
+done
+
+AM_CONDITIONAL(OPENBSD, test x$OSDIR = xopenbsd)
+AM_CONDITIONAL(LINUX, test x$OSDIR = xlinux)
+
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+SFS_PATH_CPP
+AC_PROG_CXX
+SFS_WFLAGS
+AC_PROG_RANLIB
+AC_CHECK_HEADERS(sys/cdefs.h)
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_OFF_T
+AC_TYPE_UID_T
+AC_TYPE_SIZE_T
+dnl AC_CHECK_TYPE(ssize_t, int)
+dnl AC_C_BIGENDIAN
+dnl AC_CHECK_TYPE(int32_t, int)
+dnl AC_CHECK_TYPE(u_int32_t, unsigned int)
+dnl AC_CHECK_TYPE(u_int16_t, unsigned short)
+dnl AC_CHECK_TYPE(u_int8_t, unsigned char)
+AC_CHECK_SIZEOF(long, 4)
+AC_CHECK_SIZEOF(long long, 0)
+SFS_TIMESPEC
+
+dnl POSIX.1b defines a struct timespec to record time information in two
+dnl fields: seconds and nanoseconds.  Some stat structures have these.
+dnl Others (including linux) don not have the sub-second information.
+dnl Check for this by looking for the st_atimespec field in struct stat.
+
+SFS_CHECK_STAT_FIELD(st_atimespec)
+SFS_CHECK_STAT_FIELD(st_mtimespec)
+
+SFS_DMALLOC
+SFS_CFLAGS
+
+dnl Check for maintainer flag
+AC_ARG_WITH(maintainer,
+--with-maintainer         Turn on debugging output,
+    CPPFLAGS="$CPPFLAGS -DMAINTAINER"; echo "enabling debugging output")
+
+AC_OUTPUT(Makefile arpcgen/Makefile common/Makefile 
+	openbsd/Makefile linux/Makefile server/Makefile)

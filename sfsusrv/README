@@ -1,0 +1,22 @@
+The code in this directory implements a simple user-level SFS server.
+It implements the NFS3 calls using the POSIX file system calls.  Since
+the server doesn't know when the client closes a file, the main
+implementation challenge is simulating close on the server---if server
+doesn't the server will run out of file descriptors.
+
+The server is supposed to run as a user-level process under the
+priviledge of an ordinary user.  The server itself doesn't check
+credentials and permissions.  Be careful what you export.
+
+The code hasn't been extensively tested yet (in fact, it is under
+development).  The server was able to run the andrew file system
+benchmark multiple times without restarting the server between runs.
+
+The configuration file for the server should contain two fields:
+1. the pathname for a file containing the private key of the server
+2. the directory exported.
+
+An example configure file might contain the following two lines:
+
+keyfile /home/ny2/kaashoek/src/sfs/build1/sfs_host_key
+export /disk/ld0/kaashoek/tmp

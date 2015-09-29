@@ -1,0 +1,175 @@
+=head1 NAME
+
+SFS - Self Certifying Filesystem
+
+=head1 DOCUMENTATION
+
+This manpage was written as short description and as pointer to more
+complete documentation. Up to date documentation can be found as
+Info-pages of SFS.  You can access the Info pages with command "info
+sfs".  An HTML version of the info pages may also be available on your
+system in /usr/local/lib/sfs/sfs.html or /usr/lib/sfs/sfs.html.
+
+=head1 DESCRIPTION
+
+SFS is a secure, global network filesystem with completedly
+decentralized control. It takes NFS shares exported from localhost and
+transports them securely to other hosts; NFS services do not need to
+be exposed to network.
+
+SFS features key management and authorization separated from 
+filesystem with key revokation separated from key distribution.
+
+More information and new versions can be found on the SFS website:
+ 
+http://www.fs.net/
+
+=head1 GLOBAL NAMESPACE
+
+SFS mounts directories from fileservers under a directory in the
+form:
+
+/sfs/@B<Location>,I<HostID>
+
+B<Location> is either ip address or DNS hostname of the server.
+
+I<HostID> is a collision-resistant cryptographic hash of 
+the file server's public key.
+
+=head1 CLIENT DESCRIPTION
+
+Client side operation of SFS consists of following programs:
+
+=over 2
+
+=item B<sfscd>
+
+creates and serves /sfs directory on client machine. Also
+starts nfsmounter and sfsrwcd as needed. 
+
+=item B<nfsmounter>
+
+mounts and unmounts NFS filesystems as kernel NFS client accesses them.
+
+=item B<sfsrwcd>
+
+is a daemon that implements normal read/write filesystem protocol.
+It acts as a NFS server to local NFS client.
+
+=back
+
+=head1 USER PROGRAMS
+
+On client machine user normally uses the following prog-
+rams:
+
+=over 2
+
+=item B<sfsagent>
+
+handles authentication as user moves to new filesystems.
+It also can fetch new HostIDs and perform revocation checks on them.
+
+=item B<sfskey>
+
+manages user and server keys and is used to configure sfsagent for
+different situations.
+
+=item B<rex>
+
+a remote login program, similar in spirit to SSH, that uses SFS's key
+management and authentication mechanisms, and can forward a user's
+sfsagent to remote machines.
+
+=back
+
+=head1 SERVER DESCRIPTION
+
+Server side consists of following programs:
+
+=over 2
+
+=item B<sfssd>
+
+handles incoming connections and spawns sfsrwcd and sfsrwcd as needed.
+
+=item B<sfsrwcd>
+
+is a daemon that implements normal read/write filesystem protocol and 
+talks to local NFS server.
+
+=item B<sfsauthd>
+
+handles user authentication. It communicates directly with sfsrwsd 
+to authenticate users of the file system. It also accepts connections 
+over the network from sfskey to let users download their private keys 
+or change their public keys.
+
+=item B<rexd>
+
+remote login server that performs key exchange with remote rex clients
+and does authorization checking of remote users before allowing them
+to spawn or connect to B<proxy>.
+
+=item B<proxy>
+
+server-side of the rex remote login utility, which clients spawn and
+connect to through the privileged B<rexd> server.  There is typically
+one instance of B<proxy> per user logged into a machine (regardless of
+how many times the user is logged in), running with the permissions of
+the user.
+
+=back
+
+=head1 HELPER BINARIES
+
+=over 2
+
+There are few small programs to help with misc tasks:
+
+=item B<ssu>
+
+allows an unprivileged user to become root on the local machine
+without changing his SFS credentials.
+
+=item B<rpcc>
+
+an RPC compiler for RFC1832-format XDR files.  Used by other systems
+that link against the SFS libraries.
+
+=item B<funmount>
+
+forcibly unmounts a file system, doing as little else as possible.
+May be of use when cleaning up a system after a crash.
+
+=item B<dirsearch>
+
+can be used with B<sfskey certprog> command to configure certification
+paths--lists of directories in which to look for symbolic links to
+I<HostID>s.
+
+
+=back
+
+=head1 SEE ALSO
+
+L<sfskey(1)|sfskey(1)>, L<nfs(5)|nfs(5)>, L<info(1)|info(1)>,
+L<sfsagent(1)|sfsagent(1)>
+
+=head1 NOTES
+
+Solid NFSv3 support is required from kernel and supporting utilities.
+
+=head1 CAVEATS
+
+You really do not want to kill -9 nfsmounter, as it is responsible for
+cleaning up and unmounting filesystems on the client side, if sfscd
+has died or something else happened.
+
+=head1 AUTHOR
+
+SFS was written by the SFS development team,
+sfsdev@redlab.lcs.mit.edu.  This manpage was originally written by
+Jaakko Niemi for sfs packaging in Debian/GNU Operating System.  It has
+since been edited by the SFS development team and included with the
+SFS distribution.

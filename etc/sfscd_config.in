@@ -1,0 +1,6 @@
+Release *
+  Program 344444.3 sfsrwcd
+  Program 344446.2 sfsrocd
+#Release 0.2
+#  Libdir @prefix@/lib/sfs-0.2
+#  Program 344444.3 sfsrwcd

@@ -1,0 +1,13 @@
+#
+# This file contains defaults for system-wide configuration parameters
+# in SFS.  To override any of these values, specify them in the file:
+# @etcdir@/sfs_config
+#
+sfsdir @sfsdir@
+sfsuser @sfsuser@ @sfsgroup@
+anonuser nobody
+#resvgids 32752 32768
+RSASize 1024
+DLogSize 1024
+PwdCost 11
+LogPriority daemon.notice

@@ -1,0 +1,10 @@
+
+* sfskey register should save key before attempting to connect to the 
+  server.  In the case of proactive keys, it should save the whole key
+  first before connecting to the server.
+
+* sfskey split -- split a full proactive key into two shared parts.
+
+* on load of proac key, should setup a host --> hostid hash?		
+
+* SRP should work even if the server did not return a key....	

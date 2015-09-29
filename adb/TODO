@@ -1,0 +1,36 @@
+ADB TODO list
+
+-- finish error reporting (DONE)
+-- handle (or gracefully reject) arbitrarily sized keys (DONE)
+-- store small data items in index nodes (DONE)
+-- better disk allocation (finer grain than page based)
+	notes: bitmap trade-off: space efficiency (small blocks) v. time efficiency (large blocks)
+	    possibilities: embed data in existing btree (complicated implementation)
+  			   separate (in-memory?) b-tree for extents (overkill?) (duplicates?)
+			   hash? (need nearest neighbor)
+			   bbuddy? (restoring state difficult)
+			   generic malloc scheme (w/ easy state)
+		First Fit --> DONE
+
+-- search for nearest member (DONE)
+
+-- key compression (not worth it given that keys will be hashes)
+
+-- finish garbage collection
+     BUG: data nodes have bogus parent field, try to cast index nodes
+to leaf nodes
+
+-- FIX instability that arises when initial max handles
+field is small (fixed, needed to expand free map in superblock)
+
+-- add ability to compact heap (btreedefrag) DONE
+-- attempt to remove non-existant node shouldn't fuck up tree (DONE)
+-- add merge support
+-- fix touch bug/add touch w/o modify method
+-- bug: large key/small node bug in search (returns 0)
+-- add memory only DB support
+-- move shared code into node class/code cleanup
+-- data node merging
+-- testing, testing testing
+-- make standalone version, RPM
+

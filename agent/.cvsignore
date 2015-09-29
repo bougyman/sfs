@@ -1,0 +1,12 @@
+.deps
+.libs
+Makefile
+Makefile.in
+confirm
+newaid
+sfsagent
+sfskey
+ssu
+dirsearch
+sfsdea
+sfsproac

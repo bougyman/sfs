@@ -1,0 +1,7 @@
+.deps
+Makefile
+Makefile.in
+uvfs_prot.c
+uvfs_prot.h
+nfs3_prot.c
+nfs3_prot.h

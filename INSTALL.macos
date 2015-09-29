@@ -1,0 +1,78 @@
+$Id: INSTALL.macos,v 1.4 2004/06/04 01:03:11 dm Exp $
+
+SFS compiles on MacOS 10.3.1.  The compilers included with updated
+MacOS 10.1 and 10.2 are not able to compile the SFS code.
+
+
+Installing SFS on Mac OS X
+==========================
+
+SFS 0.7.2 does not work with old versions of MacOS X.  However, the
+current version should support MacOS X as a client architecture.  See
+below for some information on getting the Finder working, however.
+
+SFS requires the Gnu Multi-Precision library.  The library can be
+obtained from ftp.gnu.org in gnu/gmp.  We have tested with version
+4.1.2.  If you need to install it yourself:
+
+tar -xzvf gmp-4.1.2.tar.gz
+cd gmp-4.1.2
+./configure
+make
+sudo make install
+
+Next, you need to obtain the SFS source.  Version 0.7.2 will not work
+on newer Mac OS versions.  If there is no later release, you will need
+to get the latest code from CVS.  See:
+
+	http://www.fs.net/sfswww/anoncvs.html
+
+Next, you need to add a user and a group for SFS.  The easiest way to
+do this is to run the following commands as root or from sudo:
+
+echo "sfs:*:7878:7878::0:0:SFS User:/Users/sfs:/bin/false" | sudo niload -p passwd /
+echo "sfs:*:7878:" | sudo niload -p group /
+
+You can obviously use a different UID and GID.  Here, we use 7878 for
+both the UID and the GID, which should be a safe bet on most machines.
+
+Now you can build the SFS source:
+
+cd sfs1
+./setup			# Only run ./setup if you are using a CVS version
+./configure
+make
+sudo make install
+
+Once you've run "sudo make install", SFS is technically working, and
+everything should work absolutely fine from the Terminal.  You should
+test at this point, though.  Run the following commands:
+
+sudo /usr/local/sbin/sfscd
+cat /sfs/@sfs.fs.net,uzwadtctbjb3dg596waiyru8cx5kb4an/CONGRATULATIONS
+
+
+Then you should see:
+
+You have set up a working SFS client.
+
+However, in you may still run into problems with the Finder if your
+numeric user and group IDs are different on the client and server.
+This is because the Finder tries to second-guess file permissions
+based on numeric user and group IDs.  The Finder may decide you don't
+have access to a file even though you legitimately do.  You can work
+around this problem by editing the file
+/usr/local/share/sfs/sfscd_config.  Change the line
+
+  Program 344444.3 sfsrwcd
+
+to
+
+  Program 344444.3 sfsrwcd -u unknown
+
+However, this may have other odd side-effects if you have multiple
+users on the same client.  See the sfsrwcd man page for more
+information.
+
+We'd appreciate any feedback or hints on your experiences running SFS
+on the Mac.  Contact us via http://www.fs.net/.  Good luck!

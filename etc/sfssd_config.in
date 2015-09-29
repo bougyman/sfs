@@ -1,0 +1,12 @@
+Server *
+  Release *
+      Service 1 sfsrwsd
+#      Service 1 sfsrosd
+      Service 2 sfsauthd
+      Service 3 rexd
+##
+## Uncomment the following lines to run an 0.6 file server for
+## compatibility
+##
+#  Release 0.6
+#      Service 1 @prefix@/lib/sfs-0.6/sfsrwsd

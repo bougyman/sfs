@@ -1,0 +1,117 @@
+###  $Id: sfsauthd_config.in,v 1.13 2004/03/05 18:04:04 kaminsky Exp $
+###
+###  Specify a file containing the authserver's host key.  Generate such
+###  a key using the "sfskey gen" command as with sfsrwsd.  If unspecified,
+###  defaults as shown.  This file MUST exist.
+#Keyfile sfs_host_key
+
+###
+###     Userfile [-update] [-create] [-passwd] [-admin] \
+###              [-hideusers] [-pub=<pubfile>] \
+###              [-prefix=<prefix>] [-uid | -uidmap=<min>-<max>+<offset>] \
+###              [-gid | -gidmap=<min>-<max>+<offset>] \
+###              [-groups=<min>-<max>] [-groupquota=<limit>] \
+###              [-refresh=<seconds>] [-timeout=<seconds>] <userfilename>
+###
+### Specify files containing public keys
+###
+###      -update  Databases are read-only by default; allow updates.
+###      -create  Create sfs_users if no such file exists
+###      -passwd  Allow users to (re)register using their UNIX passwords
+###       -admin  Allow admin modification to the database
+###   -hideusers  Return public key hashes instead of local user names
+###               when replying to group queries
+###         -pub  Store public keys in world-readable file
+###      -prefix  Prepend a prefix to all keynames (for logging)
+###         -uid  Map all users in database to given UID
+###      -uidmap  Map UIDs in the range [<min>,<max>] to <offset>
+###         -gid  Map all groups in database to given GID
+###      -gidmap  Map GIDs in the range [<min>,<max>] to <offset>
+###      -groups  Allow regular users to add groups;
+###               new GIDs will be allocated in the range [<min>,<max>]
+###  -groupquota  Default number of groups that a user can create
+###     -refresh  Default refresh value (seconds) for new user/group records
+###     -timeout  Default timeout value (seconds) for new user/group records
+###
+Userfile -update -passwd -create -pub=sfs_users.pub sfs_users
+
+###  Specify the path to the database that holds the authentication
+###  server's cache.  If unspecified, it defaults to one of the two
+###  entries shown.  The first applies if Sleepycat (BerkeleyDB) support
+###  was compiled in; otherwise, the second entry applies.  If the
+###  path begins with a "/" (slash), it is taken to be an absolute
+###  path.  If not, it is a path relative to @sfsdir@/authdb.
+#dbcache dbcache.db/
+#dbcache dbcache
+
+###  Specify the frequency (in seconds) that the authentication server
+###  will attempt to refresh its cache.  This value only serves as a
+###  minimum because the server will not attempt to download a remote
+###  user or group more frequently than its individual refresh value
+###  (set by the remote administrator or user).  The special value 
+###  `off' disables the authentication cache as well as symbolic and/or
+###  recursive groups.
+#dbcache_refresh_delay off
+
+###  Specify a file containing a list of users that are to be explicitly
+###  denied the ability to register and update keys on the authserver.
+###  If unspecified, defaults as shown.  If the default file does not
+###  exist, we assume an empty list.
+#denyfile sfs_deny
+
+###  Specify a file containing the SRP parameters that this authserver
+###  will hand to remote clients that request them.  Generate such a 
+###  file using the "sfskey gensrp" command.  If unspecified, defaults
+###  as shown.  If the default file does not exist, serving pre-generated
+###  SRP parameters is disabled.
+#srpfile sfs_srp_parms
+
+###  Define the realm to which this authserver will belong.  
+###  Authentication information (including SRP) can be shared amongst
+###  authservers that are in the same realm.  Thus, a user that wants
+###  to authenticate to a realm, can contact any authserver in that realm.
+###
+###  If the realm directive does NOT appear in this file, the authserver
+###  will not join any realm.  This behavior is the default.
+###  To specify a realm for the authserver, uncomment the following line.
+###
+###  NOTE: Changing an authserver's realm after users have already 
+###  registered using SRP requires all users to run "sfskey update."  The
+###  realm is bound into the stored SRP information.  See the SFS 
+###  documentation for more details.
+#realm fs.net
+
+###  Specify a file to log server signature endorsements. This file will
+###  provide users with audit information if the client half of their private
+###  Schnorr key is compromised.
+#LogFile /var/sfs/sign_log
+
+###  Specify a certification path to return to the client during an 
+###  "sfskey login"; this list of directories will become the arguments
+###  to a dirsearch certprog.  That is, for a certpath <dir1> <dir2>
+###  the client will add a certprog "dirsearch <dir1> <dir2>" to the
+###  user's agent.  The certification path will be tagged with a prefix
+###  equal to the authserver's realm (see above).
+###
+###  NOTE: The certpath directive only makes sense if the authserver is
+###  part of a realm.  The certpath will be ignored if the realm directive
+###  isn't specified.
+###
+###  There are three ways to specify a certpath directory:
+###
+###    certpath //dir1 /dir2 @sfs.host.domain,HOSTID/dir2
+###
+###  which can also be written
+###
+###    certpath //dir1
+###    certpath /dir2
+###    certpath @sfs.host.domain,HOSTID/dir2
+###
+###  A directory starting with two slashes ("//") is considered relative
+###  to the client machine's root ("/").  A directory starting with one
+###  slash ("/") is relative to the authserver's self-certifying pathname
+###  (the authserver performs the substitution before it sends the dir).
+###  The third form is a fully specified directory on SFS.
+###
+###  The default certpath is empty.
+#certpath /server

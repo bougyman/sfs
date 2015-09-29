@@ -1,0 +1,7 @@
+@set PREFIX /usr@dslash{}local
+@set ETCDIR /etc@dslash{}sfs
+@set SFSDIR /var@dslash{}sfs
+@set PKGDATADIR /usr@dslash{}local@dslash{}share@dslash{}sfs
+@set PKGLIBDIR /usr@dslash{}local@dslash{}lib@dslash{}sfs
+@set SFSLIBDIR /usr@dslash{}local@dslash{}lib@dslash{}sfs-0.8pre
+@set PKGINCLUDEDIR /usr@dslash{}local@dslash{}include@dslash{}sfs

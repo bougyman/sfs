@@ -1,0 +1,12 @@
+.deps
+.libs
+Makefile
+Makefile.in
+connect
+listen
+moduled
+proxy
+ptyd
+rex
+rexd
+ttyd
